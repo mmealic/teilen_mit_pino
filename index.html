@@ -1,0 +1,626 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Teilen mit Pino</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: a lesson path of chunky round nodes (one unit per level); a full-height lesson screen with Pino + squared-paper notebook on top and a number pad pinned at the bottom. */
+:root{
+  --bg:#f3f6fb; --surface:#ffffff; --line:#dbe3ee; --text:#25324a; --muted:#6b778c;
+  --primary:#2f6bff; --good:#21a867; --bad:#e8483b; --gold:#ffb81f; --heart:#ff4f6d;
+  --paper:#fdfefb; --grid:#d6e0ea; --ink:#22408f; --hl:#fff1a8;
+  --u1:#0fa39a; --u2:#7b5cf0; --u3:#ee8418; --u4:#e04d8a; --u5:#3456d1;
+  --display:"Baloo 2","Comic Sans MS",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111723; --surface:#1a2231; --line:#2c374b; --text:#e9eef7; --muted:#9ca8bb;
+  --paper:#1a222e; --grid:#283446; --ink:#abc3ff; --hl:#4a4214; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111723; --surface:#1a2231; --line:#2c374b; --text:#e9eef7; --muted:#9ca8bb;
+  --paper:#1a222e; --grid:#283446; --ink:#abc3ff; --hl:#4a4214; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:16px;line-height:1.45;overflow:hidden}
+button{font-family:inherit;color:inherit}
+button:focus-visible{outline:3px solid var(--primary);outline-offset:3px}
+.screen{height:100%;display:flex;flex-direction:column}
+.gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.inner{max-width:640px;margin:0 auto;width:100%}
+
+/* chunky buttons */
+.b3{--c:var(--primary);display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:16px;background:var(--c);color:#fff;
+  font:800 1.1rem var(--display);letter-spacing:.06em;text-transform:uppercase;padding:12px 22px;cursor:pointer;
+  box-shadow:0 5px 0 color-mix(in srgb,var(--c) 70%,#000);transition:transform .06s,box-shadow .06s}
+.b3:active{transform:translateY(5px);box-shadow:0 0 0 transparent}
+.b3[disabled]{--c:var(--line);color:var(--muted);cursor:default}
+.b3.wide{width:100%}
+.b3.ghost{background:var(--surface);color:var(--primary);box-shadow:0 5px 0 var(--line);border:2px solid var(--line)}
+
+/* top bar on path */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:10px;border-bottom:2px solid var(--line);background:var(--surface)}
+.stats{display:flex;gap:14px;align-items:center;font:800 1.1rem var(--display)}
+.stat{display:flex;align-items:center;gap:4px}
+.stat svg{width:24px;height:24px}
+.tools{display:flex;gap:8px;align-items:center}
+.lang{display:flex;border:2px solid var(--line);border-radius:12px;overflow:hidden}
+.lang button{border:0;background:none;font:800 .9rem var(--display);padding:4px 10px;cursor:pointer;color:var(--muted)}
+.lang button[aria-pressed="true"]{background:var(--primary);color:#fff}
+.icobtn{border:2px solid var(--line);background:none;border-radius:12px;width:38px;height:34px;display:grid;place-items:center;cursor:pointer;color:var(--muted)}
+.icobtn svg{width:20px;height:20px}
+
+.pathscroll{flex:1;overflow-y:auto;padding-block:16px 60px}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.brand h1{font:800 1.7rem var(--display);margin:0;line-height:1.1;text-wrap:balance}
+.brand p{margin:0;color:var(--muted)}
+.brand svg{width:56px;flex:none}
+.unit{margin-top:20px}
+.ubanner{--c:var(--u1);background:var(--c);color:#fff;border-radius:18px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;box-shadow:0 5px 0 color-mix(in srgb,var(--c) 70%,#000)}
+.ubanner small{font:800 .85rem var(--display);letter-spacing:.08em;text-transform:uppercase;opacity:.85}
+.ubanner h2{margin:0;font:800 1.3rem var(--display);line-height:1.15}
+.ubanner p{margin:2px 0 0;font-size:.95rem;opacity:.95}
+.guidebtn{flex:none;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.5);border-radius:12px;color:#fff;font:800 .85rem var(--display);padding:8px 10px;cursor:pointer;text-transform:uppercase;letter-spacing:.05em}
+.nodes{display:flex;flex-direction:column;align-items:center;gap:18px;padding-block:26px 6px}
+.node{--c:var(--u1);position:relative;width:76px;height:70px;border-radius:50%;border:0;cursor:pointer;background:var(--c);
+  box-shadow:0 7px 0 color-mix(in srgb,var(--c) 68%,#000);display:grid;place-items:center;transition:transform .06s}
+.node:active{transform:translateY(5px);box-shadow:0 2px 0 color-mix(in srgb,var(--c) 68%,#000)}
+.node svg{width:34px;height:34px;color:#fff}
+.node.locked{--c:var(--line);cursor:pointer}
+.node.locked svg{color:var(--muted)}
+.node.done{--c:var(--gold)}
+.node .flag{position:absolute;top:-38px;left:50%;transform:translateX(-50%);background:var(--surface);border:2px solid var(--line);color:var(--c);
+  font:800 .9rem var(--display);padding:2px 12px;border-radius:10px;white-space:nowrap;animation:bob 1.4s ease-in-out infinite}
+.node.current{outline:6px solid color-mix(in srgb,var(--c) 30%,transparent);outline-offset:4px}
+@keyframes bob{50%{transform:translate(-50%,-4px)}}
+.hwcard{margin-top:28px;background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.hwcard h3{margin:0;font:800 1.15rem var(--display)}
+.hwcard p{margin:0;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;z-index:50;max-width:90vw;text-align:center}
+
+/* lesson */
+.ltop{display:flex;align-items:center;gap:14px;padding-block:12px}
+.closex{border:0;background:none;cursor:pointer;color:var(--muted);width:32px;height:32px;display:grid;place-items:center}
+.closex svg{width:24px;height:24px}
+.bar{flex:1;height:16px;border-radius:999px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--good);border-radius:999px;transition:width .35s;box-shadow:inset 0 -5px 0 rgba(0,0,0,.08)}
+.hearts{display:flex;align-items:center;gap:4px;font:800 1.15rem var(--display);color:var(--heart)}
+.hearts svg{width:24px;height:24px}
+.hearts.hit{animation:pop .4s}
+@keyframes pop{40%{transform:scale(1.35)}}
+.lmain{flex:1;overflow-y:auto;padding-block:4px 12px}
+.coachrow{display:flex;gap:10px;align-items:flex-end;margin-bottom:12px}
+.mascot{width:58px;flex:none}
+.mascot.bounce{animation:hop .45s}
+@keyframes hop{40%{transform:translateY(-10px) rotate(-6deg)}}
+.bubble{position:relative;flex:1;min-width:0;background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:10px 14px;font-size:1.05rem;font-weight:700}
+.bubble::before{content:"";position:absolute;left:-9px;bottom:16px;width:14px;height:14px;background:var(--surface);border-left:2px solid var(--line);border-bottom:2px solid var(--line);transform:rotate(45deg)}
+.bubble .combo{display:inline-block;background:var(--gold);color:#3a2700;font:800 .8rem var(--display);border-radius:8px;padding:0 8px;margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em}
+.hintbox{margin-top:8px;padding-top:8px;border-top:2px dashed var(--line);font-weight:400;font-size:1rem}
+.hintbox ul{list-style:none;margin:6px 0 0;padding:0;font-variant-numeric:tabular-nums}
+.hintbox li{display:flex;gap:10px}
+.y{color:var(--good);font-weight:700}.n{color:var(--bad);font-weight:700}
+
+.paper{background-color:var(--paper);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:18px 18px;border-radius:6px;border:2px solid var(--line);padding:12px clamp(10px,3vw,24px);display:grid;grid-template-columns:1fr 1fr;gap:6px 16px}
+.col{min-width:0;overflow-x:auto}
+.colname{font:700 .75rem var(--display);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);height:20px}
+.row{min-height:42px;display:flex;align-items:center;font-size:clamp(1.05rem,4.2vw,1.5rem);color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.eq{display:inline-flex;align-items:center;gap:.3em}
+.row.head .eq{border-bottom:2px solid var(--ink);padding-bottom:1px}
+.lbl{font-family:var(--display);width:1.5em;flex:none}
+.ind{padding-left:1.5em}
+.row.aside{font-size:clamp(.85rem,3.2vw,1.05rem);color:var(--muted);min-height:30px}
+.tag{font-size:.7em;text-transform:uppercase;letter-spacing:.05em}
+.row.sum{border-top:2px dashed var(--grid);margin-top:4px}
+.row.stamp{color:var(--good);font-family:var(--display);font-weight:800}
+.blank{display:inline-block;width:2.4ch;height:1em;border-bottom:2px dotted var(--grid)}
+.slot{display:inline-flex;align-items:center;justify-content:center;min-width:3.2ch;height:1.4em;padding:0 4px;background:var(--hl);border-bottom:3px solid var(--ink);border-radius:6px 6px 0 0;font-weight:700}
+.slot.bad{border-bottom-color:var(--bad)}
+.slot.shake{animation:shake .35s}
+.caret{display:inline-block;width:2px;height:.9em;background:var(--ink);animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+@keyframes shake{20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+.v.fresh{animation:pop .35s;color:var(--good)}
+.wait{font-size:.95rem;color:var(--muted);font-style:italic;padding-top:8px;white-space:normal}
+
+.lfoot{border-top:2px solid var(--line);background:var(--surface);padding-block:10px calc(12px + env(safe-area-inset-bottom,0px))}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.key{border:2px solid var(--line);background:var(--bg);border-radius:14px;height:clamp(44px,6.5vh,56px);font:800 1.5rem var(--display);cursor:pointer;box-shadow:0 4px 0 var(--line);color:var(--text)}
+.key:active{transform:translateY(4px);box-shadow:none}
+.key svg{width:24px;height:24px;vertical-align:middle}
+.key.hint{color:var(--gold)}
+
+.fb{position:fixed;left:0;right:0;bottom:0;z-index:20;padding-block:16px calc(18px + env(safe-area-inset-bottom,0px));animation:up .2s ease-out}
+.fb.good{background:color-mix(in srgb,var(--good) 18%,var(--surface))}
+.fb.bad{background:color-mix(in srgb,var(--bad) 16%,var(--surface))}
+@keyframes up{from{transform:translateY(100%)}}
+.fb h3{margin:0;font:800 1.5rem var(--display);display:flex;align-items:center;gap:8px}
+.fb.good h3{color:var(--good)}.fb.bad h3{color:var(--bad)}
+.fb p{margin:4px 0 12px;font-weight:700}
+.fb .xp{color:var(--gold);font:800 1.1rem var(--display)}
+
+/* result */
+.result{flex:1;overflow-y:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding-block:24px}
+.result h2{font:800 2rem var(--display);margin:0;line-height:1.1;text-wrap:balance}
+.result p{margin:0;color:var(--muted);max-width:40ch}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;width:100%;max-width:420px}
+.tile{--c:var(--gold);border:2px solid var(--c);border-radius:14px;overflow:hidden;background:var(--surface)}
+.tile small{display:block;background:var(--c);color:#fff;font:800 .75rem var(--display);letter-spacing:.06em;text-transform:uppercase;padding:3px}
+.tile b{display:block;font:800 1.5rem var(--display);padding:6px 0;font-variant-numeric:tabular-nums}
+.bonus{color:var(--gold);font:800 1.05rem var(--display)}
+.rbtns{display:flex;flex-direction:column;gap:12px;width:100%;max-width:420px;margin-top:8px}
+
+/* modal */
+.modal{position:fixed;inset:0;z-index:40;background:rgba(10,15,25,.55);display:flex;align-items:flex-end;justify-content:center}
+.mbox{background:var(--surface);width:100%;max-width:640px;max-height:92%;overflow-y:auto;border-radius:22px 22px 0 0;padding-block:20px calc(20px + env(safe-area-inset-bottom,0px));animation:up .22s ease-out}
+.mbox h2{font:800 1.5rem var(--display);margin:0 0 4px}
+.mbox .sub{color:var(--muted);margin:0 0 12px}
+.gsteps{list-style:none;margin:0 0 14px;padding:0;display:flex;flex-direction:column;gap:8px}
+.gsteps li{display:flex;gap:10px;align-items:baseline}
+.gsteps .gt{flex:none;font:800 .72rem var(--display);text-transform:uppercase;letter-spacing:.06em;background:var(--bg);border:2px solid var(--line);border-radius:8px;padding:1px 8px;min-width:7.5em;text-align:center}
+.gsteps .key-line{background:var(--hl);border-radius:6px;padding:0 6px;font-weight:700}
+.gnote{color:var(--bad);font-weight:700;margin:0 0 14px}
+.mbtns{display:flex;flex-direction:column;gap:12px;margin-top:14px}
+.hwform{display:flex;align-items:center;gap:10px;font:800 1.6rem var(--display);margin:8px 0}
+.hwform input{width:5ch;font:800 1.6rem var(--display);text-align:center;border:2px solid var(--line);border-radius:12px;padding:4px;background:var(--bg);color:var(--text)}
+.err{color:var(--bad);font-weight:700;margin:0}
+canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div id="app" class="screen"></div>
+<div id="layer"></div>
+<canvas id="confetti" hidden></canvas>
+
+<script>
+/* ---------- icons + mascot ---------- */
+const IC={
+  flame:'<svg viewBox="0 0 24 24"><path fill="#ff8a1f" d="M12 2c1 4 5 5.5 5 11a5 5 0 0 1-10 0c0-2.5 1.2-4 2.5-5 .2 2 1 3 2 3.3C11 8 11.5 5 12 2z"/><path fill="#ffd23f" d="M12 12c.6 1.6 2.5 2.2 2.5 4.2a2.5 2.5 0 0 1-5 0c0-1.4.9-2.4 2.5-4.2z"/></svg>',
+  gem:'<svg viewBox="0 0 24 24"><path fill="#ffb81f" d="M12 2l2.9 6.2 6.6.8-4.9 4.6 1.3 6.6L12 16.9 6.1 20.2l1.3-6.6L2.5 9l6.6-.8z"/></svg>',
+  heart:'<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 21s-7.5-4.6-9.5-9.2C1 8.3 3.3 4.5 7 4.5c2.1 0 3.6 1.2 5 3 1.4-1.8 2.9-3 5-3 3.7 0 6 3.8 4.5 7.3C19.5 16.4 12 21 12 21z"/></svg>',
+  star:'<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.5l2.8 6 6.5.7-4.9 4.4 1.4 6.4L12 16.8 6.2 20l1.4-6.4L2.7 9.2l6.5-.7z"/></svg>',
+  check:'<svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  lock:'<svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="currentColor"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="2.5"/></svg>',
+  x:'<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>',
+  back:'<svg viewBox="0 0 24 24"><path d="M20 7H9l-5 5 5 5h11zM12 10l4 4m0-4l-4 4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/></svg>',
+  bulb:'<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2zM9 20h6v1.5a.5.5 0 0 1-.5.5h-5a.5.5 0 0 1-.5-.5z"/></svg>',
+  sound:'<svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  mute:'<svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9l5 6m0-6l-5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  book:'<svg viewBox="0 0 24 24"><path fill="currentColor" d="M5 3h11a3 3 0 0 1 3 3v15H7a2 2 0 0 1-2-2zm2 14v2h10v-2z"/></svg>'
+};
+function pino(mood){
+  const mouth={happy:'<path d="M31 64q9 9 18 0" fill="none" stroke="#3a2a12" stroke-width="3" stroke-linecap="round"/>',
+    sad:'<path d="M31 69q9-7 18 0" fill="none" stroke="#3a2a12" stroke-width="3" stroke-linecap="round"/><path d="M27 47l8 3M53 47l-8 3" stroke="#3a2a12" stroke-width="2.5" stroke-linecap="round"/>',
+    cheer:'<ellipse cx="40" cy="66" rx="8" ry="6" fill="#3a2a12"/><ellipse cx="40" cy="69" rx="4.5" ry="2.5" fill="#ff7d8a"/>',
+    think:'<path d="M33 66h13" stroke="#3a2a12" stroke-width="3" stroke-linecap="round"/>'}[mood||"happy"];
+  return `<svg viewBox="0 0 80 124" aria-hidden="true">
+    <rect x="18" y="4" width="44" height="18" rx="8" fill="#ff8fa3"/>
+    <rect x="16" y="20" width="48" height="10" fill="#b8c2d0"/><rect x="16" y="23" width="48" height="2" fill="#97a3b5"/>
+    <rect x="16" y="29" width="48" height="58" fill="#ffc93c"/><rect x="31" y="29" width="18" height="58" fill="#ffd866"/>
+    <path d="M16 87h48L40 120z" fill="#f4cfa1"/><path d="M33.6 110.5h12.8L40 120z" fill="#3a3f4a"/>
+    <circle cx="31" cy="54" r="5" fill="#fff"/><circle cx="49" cy="54" r="5" fill="#fff"/>
+    <circle cx="32" cy="55" r="2.6" fill="#1f2430"/><circle cx="50" cy="55" r="2.6" fill="#1f2430"/>
+    <circle cx="24" cy="64" r="3.5" fill="#ff9e8a" opacity=".7"/><circle cx="56" cy="64" r="3.5" fill="#ff9e8a" opacity=".7"/>
+    ${mouth}</svg>`;
+}
+
+/* ---------- text ---------- */
+function zeros(lang,u){return ({de:{10:"eine Null",100:"zwei Nullen",1000:"drei Nullen"},bs:{10:"jednu nulu",100:"dvije nule",1000:"tri nule"}})[lang][u];}
+const T={
+de:{
+  h1:"Teilen mit Pino", tag:"Halbschriftlich dividieren und mit der Umkehraufgabe kontrollieren.",
+  unit:"Einheit", lesson:n=>`Lektion ${n}`, go:"Los!", guide:"So geht's", locked:"Schaffe zuerst die Lektion davor.",
+  units:[["Starte mit 10","Das Ergebnis liegt zwischen 11 und 19. Du startest immer mit 10 · Teiler."],
+         ["Die richtige Startzahl","Jetzt passt mehr hinein: 20 ·, 30 · oder 40 · Teiler."],
+         ["Große Zehner","Ergebnisse bis 99. Suche weit oben in der Reihe."],
+         ["Hunderter","Drei Schritte: erst Hunderter, dann Zehner, dann Einer."],
+         ["Meister-Mix","Alles gemischt. Zeig, was du kannst!"]],
+  hw:"Aufgabe aus dem Heft", hwDesc:"Rechne eine Hausaufgabe Schritt für Schritt mit Pino.", hwGo:"Rechnen",
+  hwRange:"Bitte eine Zahl bis 9999 und einen Teiler von 2 bis 9.", hwBad:(n,d)=>`${n} : ${d} geht nicht ohne Rest. Prüfe die Zahlen im Heft.`,
+  division:"Teilen", kontrolle:"Kontrolle", K:"K:", wait:"Erst teilen, dann kontrollieren.", rest:"Rest",
+  check:"Prüfen", cont:"Weiter", retry:"Nochmal", streak:"Tage in Folge", xp:"XP", sound:"Ton an/aus", close:"Schließen",
+  pChunk:(R,base,first)=>`${first?"Womit fängst du an?":"Was nimmst du als Nächstes?"} Suche die größte Zahl aus der Reihe ${base}, ${2*base}, ${3*base} …, die noch in ${R} passt.`,
+  pQuot:(c,d)=>`Rechne: ${c} : ${d} = ?`,
+  pRest:(a,b)=>`Was bleibt übrig? ${a} − ${b} = ?`,
+  pTotal:ps=>`Zähle die Ergebnisse zusammen: ${ps.join(" + ")} = ?`,
+  pK:(p,d)=>`Jetzt die Kontrolle mit der Umkehraufgabe: ${p} · ${d} = ?`,
+  pSum:(cs,n)=>`Ganz wichtig: zusammenzählen! ${cs.join(" + ")} = ?  Es muss wieder ${n} herauskommen.`,
+  tooBig:(v,R)=>`Zu groß. ${v} passt nicht in ${R}.`,
+  notRound:(v,d,base)=>`${v} : ${d} gibt kein rundes Ergebnis. Nimm eine Zahl aus der Reihe ${base}, ${2*base}, ${3*base} …`,
+  tooSmall:"Das geht, aber da passt noch mehr hinein. Nimm eine größere Zahl.",
+  wrong:"Das stimmt noch nicht. Rechne nochmal nach.", sumWrong:n=>`Das ist nicht ${n}. Rechne die Plus-Aufgabe nochmal.`,
+  fits:"passt", tooBigShort:"zu groß", hChunk:"Geh die Reihe durch. Nimm die letzte Zahl mit ✓.",
+  hQuot:(c,u,d,k)=>`Denk an ${c/u} : ${d} = ${k}. Dann hängst du ${zeros("de",u)} an.`,
+  hQuot1:(c,d)=>`Einmaleins: ? · ${d} = ${c}`,
+  hRestSplit:(a,big,b)=>`Erst ${a} − ${big} = ${a-big}, dann noch − ${b-big}.`,
+  hRestUp:(a,b)=>`Zähle hoch: von ${b} bis ${a}. Wie viel fehlt?`,
+  hTotal:"Addiere die Zahlen rechts vom Gleichheitszeichen.",
+  hK:(k,u,d)=>`${k} · ${d} = ${k*d}. Dann ${zeros("de",u)} anhängen.`, hK1:"Das ist eine Einmaleins-Aufgabe.",
+  hSum:"Addiere Schritt für Schritt. Wenn alles stimmt, kommt die Zahl aus der Aufgabe heraus.",
+  combo:n=>`${n} richtig in Folge!`,
+  good:["Richtig gelöst!","Super gemacht!","Klasse!","Stark!"], bad:"Nicht ganz.",
+  solvedLine:(q,d,n)=>`${q} · ${d} = ${n}. Die Kontrolle stimmt.`,
+  done:"Lektion geschafft!", doneSub:"Pino ist stolz auf dich.", acc:"Genau", time:"Zeit", xpGot:"XP",
+  perfect:"Ohne Fehler! +5 XP Bonus", fail:"Keine Herzen mehr", failSub:"Kein Problem. Übung macht den Meister.",
+  toPath:"Zum Lernpfad", quitQ:"Wirklich aufhören?", quitSub:"Dein Fortschritt in dieser Lektion geht verloren.", keep:"Weiterüben", quit:"Aufhören",
+  g:{start:"Start",divide:"Teilen",rest:"Rest",total:"Zusammen",k:"Kontrolle",sum:"Nicht vergessen"},
+  fitsS:(a,b,take)=>b?`${a} passt, ${b} ist zu groß. Also startest du mit ${take}.`:`${a} passt. Also nimmst du ${take}.`,
+  pitfall:"Nicht mit 75 : 5 anfangen! Besser 50 : 5 = 10, dann 35 : 5 = 7.", letsgo:"Los geht's"
+},
+bs:{
+  h1:"Dijeljenje s Pinom", tag:"Dijeli polupismeno i provjeri obrnutim zadatkom.",
+  unit:"Cjelina", lesson:n=>`Lekcija ${n}`, go:"Kreni!", guide:"Ovako se radi", locked:"Prvo završi prethodnu lekciju.",
+  units:[["Počni sa 10","Rezultat je između 11 i 19. Uvijek počinješ sa 10 · djelilac."],
+         ["Pravi početni broj","Sada stane više: 20 ·, 30 · ili 40 · djelilac."],
+         ["Velike desetice","Rezultati do 99. Traži visoko u nizu."],
+         ["Stotice","Tri koraka: prvo stotice, pa desetice, pa jedinice."],
+         ["Majstorski miks","Sve pomiješano. Pokaži šta znaš!"]],
+  hw:"Zadatak iz sveske", hwDesc:"Riješi domaću zadaću korak po korak s Pinom.", hwGo:"Računaj",
+  hwRange:"Molim broj do 9999 i djelilac od 2 do 9.", hwBad:(n,d)=>`${n} : ${d} ne ide bez ostatka. Provjeri brojeve u svesci.`,
+  division:"Dijeljenje", kontrolle:"Provjera", K:"P:", wait:"Prvo podijeli, pa provjeri.", rest:"Ostatak",
+  check:"Provjeri", cont:"Dalje", retry:"Ponovo", streak:"dana zaredom", xp:"XP", sound:"Zvuk uklj./isklj.", close:"Zatvori",
+  pChunk:(R,base,first)=>`${first?"Čime počinješ?":"Šta uzimaš sljedeće?"} Potraži najveći broj iz niza ${base}, ${2*base}, ${3*base} …, koji još stane u ${R}.`,
+  pQuot:(c,d)=>`Izračunaj: ${c} : ${d} = ?`,
+  pRest:(a,b)=>`Koliko ostaje? ${a} − ${b} = ?`,
+  pTotal:ps=>`Saberi rezultate: ${ps.join(" + ")} = ?`,
+  pK:(p,d)=>`Sada provjera obrnutim zadatkom: ${p} · ${d} = ?`,
+  pSum:(cs,n)=>`Jako važno: saberi! ${cs.join(" + ")} = ?  Mora opet biti ${n}.`,
+  tooBig:(v,R)=>`Prevelik. ${v} ne stane u ${R}.`,
+  notRound:(v,d,base)=>`${v} : ${d} ne daje okrugao rezultat. Uzmi broj iz niza ${base}, ${2*base}, ${3*base} …`,
+  tooSmall:"Može, ali stane još više. Uzmi veći broj.",
+  wrong:"To još nije tačno. Izračunaj ponovo.", sumWrong:n=>`To nije ${n}. Izračunaj sabiranje ponovo.`,
+  fits:"stane", tooBigShort:"prevelik", hChunk:"Prođi kroz niz. Uzmi zadnji broj sa ✓.",
+  hQuot:(c,u,d,k)=>`Misli na ${c/u} : ${d} = ${k}. Onda dodaš ${zeros("bs",u)}.`,
+  hQuot1:(c,d)=>`Tablica množenja: ? · ${d} = ${c}`,
+  hRestSplit:(a,big,b)=>`Prvo ${a} − ${big} = ${a-big}, pa još − ${b-big}.`,
+  hRestUp:(a,b)=>`Broji naprijed: od ${b} do ${a}. Koliko nedostaje?`,
+  hTotal:"Saberi brojeve desno od znaka jednakosti.",
+  hK:(k,u,d)=>`${k} · ${d} = ${k*d}. Onda dodaj ${zeros("bs",u)}.`, hK1:"To je zadatak iz tablice množenja.",
+  hSum:"Sabiraj korak po korak. Ako je sve tačno, dobiješ broj iz zadatka.",
+  combo:n=>`${n} tačno zaredom!`,
+  good:["Tačno riješeno!","Odlično!","Bravo!","Super!"], bad:"Nije baš.",
+  solvedLine:(q,d,n)=>`${q} · ${d} = ${n}. Provjera je tačna.`,
+  done:"Lekcija završena!", doneSub:"Pino je ponosan na tebe.", acc:"Tačnost", time:"Vrijeme", xpGot:"XP",
+  perfect:"Bez greške! +5 XP bonus", fail:"Nema više srca", failSub:"Nema problema. Vježba čini majstora.",
+  toPath:"Nazad na mapu", quitQ:"Stvarno prestati?", quitSub:"Napredak u ovoj lekciji će se izgubiti.", keep:"Nastavi vježbati", quit:"Prestani",
+  g:{start:"Početak",divide:"Dijeli",rest:"Ostatak",total:"Saberi",k:"Provjera",sum:"Ne zaboravi"},
+  fitsS:(a,b,take)=>b?`${a} stane, ${b} je prevelik. Znači počinješ sa ${take}.`:`${a} stane. Znači uzimaš ${take}.`,
+  pitfall:"Ne počinji sa 75 : 5! Bolje 50 : 5 = 10, pa 35 : 5 = 7.", letsgo:"Krenimo"
+}};
+const UNITS=[{lv:1,n:3,ex:[84,7]},{lv:2,n:3,ex:[184,8]},{lv:3,n:3,ex:[568,8]},{lv:4,n:2,ex:[936,4]},{lv:"mix",n:3,ex:[150,6]}];
+const PER_UNIT=4;
+
+/* ---------- persistence ---------- */
+const G={lang:"de",xp:0,streak:0,lastDay:"",progress:0,sound:true};
+try{Object.assign(G,JSON.parse(localStorage.getItem("pino-teilen-v1")||"{}"));}catch(e){}
+function save(){try{localStorage.setItem("pino-teilen-v1",JSON.stringify(G));}catch(e){}}
+const t=()=>T[G.lang];
+const dayKey=d=>`${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+function liveStreak(){const y=new Date();y.setDate(y.getDate()-1);return (G.lastDay===dayKey(new Date())||G.lastDay===dayKey(y))?G.streak:0;}
+
+/* ---------- sound ---------- */
+let AC=null;
+function tone(seq){if(!G.sound)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+  let t0=AC.currentTime;seq.forEach(([f,d,type])=>{const o=AC.createOscillator(),g=AC.createGain();o.type=type||"sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(.18,t0+.02);g.gain.exponentialRampToValueAtTime(.0001,t0+d);
+  o.connect(g).connect(AC.destination);o.start(t0);o.stop(t0+d+.02);t0+=d*.8;});}catch(e){}}
+const sfx={tick:()=>tone([[880,.09]]),good:()=>tone([[660,.12],[990,.18]]),bad:()=>tone([[220,.22,"square"]]),
+  win:()=>tone([[523,.15],[659,.15],[784,.15],[1047,.35]]),tap:()=>tone([[440,.04,"triangle"]])};
+
+/* ---------- problems ---------- */
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+function makeProblem(n,d){
+  const q=n/d,s=String(q),parts=[];
+  for(let i=0;i<s.length;i++){const k=+s[i],u=10**(s.length-1-i);if(k)parts.push({k,u,p:k*u,chunk:k*u*d});}
+  const rem=[n];for(let i=1;i<parts.length;i++)rem[i]=rem[i-1]-parts[i-1].chunk;
+  const last=parts.length-1,steps=[];
+  parts.forEach((pt,i)=>{
+    if(i>0)steps.push({type:"rest",i,key:"rest"+i,expected:rem[i]});
+    if(!(i>0&&i===last))steps.push({type:"chunk",i,key:"chunk"+i,expected:pt.chunk});
+    steps.push({type:"quot",i,key:"quot"+i,expected:pt.p});
+  });
+  steps.push({type:"total",key:"total",expected:q});
+  const kStart=steps.length;
+  parts.forEach((pt,i)=>steps.push({type:"kpart",i,key:"kpart"+i,expected:pt.chunk}));
+  steps.push({type:"ksum",key:"ksum",expected:n});
+  const idx={};steps.forEach((st,j)=>idx[st.key]=j);
+  return {n,d,q,parts,rem,steps,idx,kStart,last};
+}
+function gen(level,avoid){
+  if(level==="mix")level=rnd(2,4);
+  let d,q,tries=0;
+  do{tries++;
+    if(level===1){d=rnd(3,9);q=rnd(11,19);}
+    else if(level===2){d=rnd(3,9);q=rnd(21,49);}
+    else if(level===3){d=rnd(3,9);q=rnd(51,99);}
+    else{d=rnd(2,6);q=rnd(111,Math.floor(999/d));}
+  }while((String(q).includes("0")||avoid.has(q*d+":"+d))&&tries<300);
+  avoid.add(q*d+":"+d);return makeProblem(q*d,d);
+}
+function solvedVals(P){const v={};const cv=i=>(i>0&&i===P.last)?P.rem[i]:P.parts[i].chunk;P.steps.forEach(s=>v[s.key]=s.expected);return v;}
+
+/* ---------- notebook rendering (shared by lesson + guide) ---------- */
+function notebook(P,vals,cur,o){
+  o=o||{};const tt=t();
+  const done=cur>=P.steps.length;
+  const ref=k=>P.idx[k]<cur?`<span class="v">${vals[k]}</span>`:`<span class="blank"></span>`;
+  const slot=k=>{const j=P.idx[k];
+    if(j<cur)return `<span class="v${o.fresh===k?" fresh":""}">${vals[k]}</span>`;
+    if(j===cur&&!done&&!o.static)return `<span class="slot${o.bad?" bad shake":""}" aria-live="polite">${o.entry||""}<i class="caret"></i></span>`;
+    return `<span class="blank"></span>`;};
+  let a=`<div class="col"><div class="colname">${tt.division}</div>
+    <div class="row head">${o.letter?`<span class="lbl">${o.letter})</span>`:""}<span class="eq">${P.n} : ${P.d} = ${slot("total")}</span></div>`;
+  P.parts.forEach((pt,i)=>{
+    if(i>0)a+=`<div class="row aside${o.letter?" ind":""}"><span class="eq"><span class="tag">${tt.rest}</span> ${P.rem[i-1]} − ${ref("chunk"+(i-1))} = ${slot("rest"+i)}</span></div>`;
+    const left=(i>0&&i===P.last)?ref("rest"+i):slot("chunk"+i);
+    a+=`<div class="row${o.letter?" ind":""}"><span class="eq">${left} : ${P.d} = ${slot("quot"+i)}</span></div>`;
+  });
+  a+=`</div>`;
+  let b=`<div class="col"><div class="colname">${tt.kontrolle}</div>`;
+  if(cur<P.kStart)b+=`<p class="wait">${tt.wait}</p>`;
+  else{
+    b+=`<div class="row head"><span class="lbl">${tt.K}</span><span class="eq">${P.q} · ${P.d} = ${P.n}</span></div>`;
+    P.parts.forEach((pt,i)=>b+=`<div class="row ind"><span class="eq">${pt.p} · ${P.d} = ${slot("kpart"+i)}</span></div>`);
+    b+=`<div class="row sum ind"><span class="eq">${P.parts.map((_,i)=>ref("kpart"+i)).join(" + ")} = ${slot("ksum")}</span></div>`;
+    if(done)b+=`<div class="row stamp ind">✓ ${P.n} = ${P.n}</div>`;
+  }
+  return `<div class="paper">${a}${b}</div>`;
+}
+
+/* ---------- path screen ---------- */
+const app=document.getElementById("app"),layer=document.getElementById("layer");
+let L=null; // current lesson
+function langToggle(){return `<div class="lang" role="group" aria-label="Sprache / Jezik"><button data-lang="de" aria-pressed="${G.lang==="de"}">DE</button><button data-lang="bs" aria-pressed="${G.lang==="bs"}">BS</button></div>`;}
+function bindLang(re){app.querySelectorAll("[data-lang]").forEach(b=>b.onclick=()=>{G.lang=b.dataset.lang;save();document.documentElement.lang=G.lang;re();});}
+function showPath(scrollToCurrent){
+  L=null;const tt=t();document.documentElement.lang=G.lang;
+  let units="";
+  UNITS.forEach((u,ui)=>{
+    let nodes="";
+    for(let l=0;l<PER_UNIT;l++){
+      const g=ui*PER_UNIT+l,st=g<G.progress?"done":g===G.progress?"current":"locked";
+      const off=[0,-52,0,52][l];
+      nodes+=`<button class="node ${st}" style="--c:var(--u${ui+1});transform:translateX(${off}px)" data-g="${g}" aria-label="${tt.unit} ${ui+1}, ${tt.lesson(l+1)}">
+        ${st==="current"?`<span class="flag">${tt.go}</span>`:""}${st==="done"?IC.check:st==="locked"?IC.lock:IC.star}</button>`;
+    }
+    units+=`<section class="unit"><div class="ubanner" style="--c:var(--u${ui+1})"><div><small>${tt.unit} ${ui+1} · ${u.ex[0]} : ${u.ex[1]}</small><h2>${tt.units[ui][0]}</h2><p>${tt.units[ui][1]}</p></div>
+      <button class="guidebtn" data-guide="${ui}">${tt.guide}</button></div><div class="nodes">${nodes}</div></section>`;
+  });
+  app.innerHTML=`<div class="topbar gut"><div class="stats">
+      <span class="stat" title="${tt.streak}">${IC.flame}${liveStreak()}</span>
+      <span class="stat" title="XP">${IC.gem}${G.xp}</span></div>
+    <div class="tools">${langToggle()}<button class="icobtn" id="snd" aria-label="${tt.sound}">${G.sound?IC.sound:IC.mute}</button></div></div>
+    <div class="pathscroll gut"><div class="inner">
+      <div class="brand">${pino("happy")}<div><h1>${tt.h1}</h1><p>${tt.tag}</p></div></div>
+      ${units}
+      <div class="hwcard"><div><h3>${tt.hw}</h3><p>${tt.hwDesc}</p></div><button class="b3" id="hwbtn" style="--c:var(--u5)">${tt.hwGo}</button></div>
+    </div></div>`;
+  bindLang(()=>showPath());
+  app.querySelector("#snd").onclick=()=>{G.sound=!G.sound;save();showPath();};
+  app.querySelectorAll(".node").forEach(b=>b.onclick=()=>{
+    const g=+b.dataset.g;if(g>G.progress){toast(t().locked);return;}
+    const ui=Math.floor(g/PER_UNIT);
+    if(g===G.progress&&g%PER_UNIT===0)showGuide(ui,()=>startLesson(g));else startLesson(g);
+  });
+  app.querySelectorAll("[data-guide]").forEach(b=>b.onclick=()=>showGuide(+b.dataset.guide));
+  app.querySelector("#hwbtn").onclick=showHomework;
+  if(scrollToCurrent!==false){const c=app.querySelector(".node.current");if(c)c.scrollIntoView({block:"center"});}
+}
+let toastT;
+function toast(msg){let el=document.querySelector(".toast");if(!el){el=document.createElement("div");el.className="toast";el.setAttribute("role","status");document.body.appendChild(el);}
+  el.textContent=msg;clearTimeout(toastT);toastT=setTimeout(()=>el.remove(),2200);}
+
+/* ---------- guide modal ---------- */
+function guideSteps(P){
+  const tt=t(),out=[];const d=P.d;
+  P.parts.forEach((pt,i)=>{
+    if(i>0)out.push([tt.g.rest,`${P.rem[i-1]} − ${P.parts[i-1].chunk} = ${P.rem[i]}`]);
+    if(!(i>0&&i===P.last)){
+      const a=`${pt.k*pt.u} · ${d} = ${pt.chunk}`;const b=pt.k<9?`${(pt.k+1)*pt.u} · ${d} = ${(pt.k+1)*pt.u*d}`:"";
+      out.push([tt.g.start,tt.fitsS(a,b,`<b>${pt.chunk}</b>`)]);
+    }
+    out.push([tt.g.divide,`${pt.chunk} : ${d} = ${pt.p}`]);
+  });
+  out.push([tt.g.total,`${P.parts.map(p=>p.p).join(" + ")} = ${P.q}`]);
+  out.push([tt.g.k,P.parts.map(p=>`${p.p} · ${d} = ${p.chunk}`).join(", ")]);
+  out.push([tt.g.sum,`<span class="key-line">${P.parts.map(p=>p.chunk).join(" + ")} = ${P.n} ✓</span>`]);
+  return out;
+}
+function modal(html){layer.innerHTML=`<div class="modal" role="dialog" aria-modal="true"><div class="mbox gut"><div class="inner">${html}</div></div></div>`;
+  const m=layer.querySelector(".modal");m.onclick=e=>{if(e.target===m)closeModal();};return m;}
+function closeModal(){layer.innerHTML="";}
+function showGuide(ui,onStart){
+  const tt=t(),u=UNITS[ui],P=makeProblem(u.ex[0],u.ex[1]);
+  const steps=guideSteps(P).map(([g,x])=>`<li><span class="gt">${g}</span><span>${x}</span></li>`).join("");
+  const m=modal(`<h2>${tt.guide}</h2><p class="sub">${tt.unit} ${ui+1} · ${tt.units[ui][0]}</p>
+    ${notebook(P,solvedVals(P),P.steps.length,{static:true})}
+    <ol class="gsteps" style="margin-top:14px">${steps}</ol>
+    ${ui===0?`<p class="gnote">${tt.pitfall}</p>`:""}
+    <div class="mbtns">${onStart?`<button class="b3 wide" id="gstart">${tt.letsgo}</button>`:""}<button class="b3 ghost wide" id="gclose">${tt.close}</button></div>`);
+  m.querySelector("#gclose").onclick=closeModal;
+  if(onStart)m.querySelector("#gstart").onclick=()=>{closeModal();onStart();};
+}
+function showHomework(){
+  const tt=t();
+  const m=modal(`<h2>${tt.hw}</h2><p class="sub">${tt.hwDesc}</p>
+    <div class="hwform"><input id="hw-n" inputmode="numeric" value="150" aria-label="Zahl"> : <input id="hw-d" inputmode="numeric" value="6" aria-label="Teiler"></div>
+    <p class="err" id="hw-err"></p>
+    <div class="mbtns"><button class="b3 wide" id="hw-go">${tt.hwGo}</button><button class="b3 ghost wide" id="hw-close">${tt.close}</button></div>`);
+  m.querySelector("#hw-close").onclick=closeModal;
+  m.querySelector("#hw-go").onclick=()=>{
+    const n=+m.querySelector("#hw-n").value,d=+m.querySelector("#hw-d").value,err=m.querySelector("#hw-err");
+    if(!Number.isInteger(n)||!Number.isInteger(d)||d<2||d>9||n<d||n>9999){err.textContent=tt.hwRange;return;}
+    if(n%d){err.textContent=tt.hwBad(n,d);return;}
+    closeModal();startLesson(-1,[makeProblem(n,d)]);
+  };
+}
+
+/* ---------- lesson ---------- */
+function startLesson(g,custom){
+  const avoid=new Set();let probs=custom;
+  if(!probs){const u=UNITS[Math.floor(g/PER_UNIT)];probs=Array.from({length:u.n},()=>gen(u.lv,avoid));}
+  L={g,probs,pi:0,cur:0,vals:{},entry:"",hearts:5,combo:0,comboMsg:"",steps:0,wrong:0,stepMiss:0,hint:false,mood:"happy",bad:false,fresh:null,fb:null,start:Date.now(),letterBase:rnd(0,7)};
+  drawLesson();
+}
+function P(){return L.probs[L.pi];}
+function promptText(){
+  const p=P(),st=p.steps[L.cur],tt=t();if(!st)return "";
+  const cv=i=>(i>0&&i===p.last)?L.vals["rest"+i]:L.vals["chunk"+i];
+  if(st.type==="chunk"){const pt=p.parts[st.i];return tt.pChunk(p.rem[st.i],pt.u*p.d,st.i===0);}
+  if(st.type==="quot")return tt.pQuot(cv(st.i),p.d);
+  if(st.type==="rest")return tt.pRest(p.rem[st.i-1],cv(st.i-1));
+  if(st.type==="total")return tt.pTotal(p.parts.map((_,i)=>L.vals["quot"+i]));
+  if(st.type==="kpart")return tt.pK(p.parts[st.i].p,p.d);
+  return tt.pSum(p.parts.map((_,i)=>L.vals["kpart"+i]),p.n);
+}
+function hintHTML(){
+  const p=P(),st=p.steps[L.cur],tt=t(),d=p.d;
+  const cv=i=>(i>0&&i===p.last)?L.vals["rest"+i]:L.vals["chunk"+i];
+  if(st.type==="chunk"){const pt=p.parts[st.i],base=pt.u*d,R=p.rem[st.i];let li="";
+    for(let m=1;m<=9;m++){const v=m*base,ok=v<=R;li+=`<li><span>${m*pt.u} · ${d} = ${v}</span>${ok?`<span class="y">✓ ${tt.fits}</span>`:`<span class="n">✗ ${tt.tooBigShort}</span>`}</li>`;if(!ok)break;}
+    return `${tt.hChunk}<ul>${li}</ul>`;}
+  if(st.type==="quot"){const pt=p.parts[st.i],c=cv(st.i);return pt.u>1?tt.hQuot(c,pt.u,d,pt.k):tt.hQuot1(c,d);}
+  if(st.type==="rest"){const a=p.rem[st.i-1],b=cv(st.i-1);let big=Math.floor(b/100)*100;if(big===0||big===b)big=Math.floor(b/10)*10;
+    return (big>0&&big<b)?tt.hRestSplit(a,big,b):tt.hRestUp(a,b);}
+  if(st.type==="total")return tt.hTotal;
+  if(st.type==="kpart"){const pt=p.parts[st.i];return pt.u>1?tt.hK(pt.k,pt.u,d):tt.hK1;}
+  return tt.hSum;
+}
+function drawLesson(){
+  const tt=t(),p=P();
+  const frac=(L.pi+L.cur/p.steps.length)/L.probs.length;
+  const letter="abcdefgh"[(L.letterBase+L.pi)%8];
+  app.innerHTML=`<div class="ltop gut"><div class="inner" style="display:flex;align-items:center;gap:14px">
+      <button class="closex" id="quit" aria-label="${tt.close}">${IC.x}</button>
+      <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(frac*100)}"><i style="width:${Math.max(4,frac*100)}%"></i></div>
+      <span class="hearts${L.heartHit?" hit":""}" aria-label="${L.hearts}">${IC.heart}${L.hearts}</span></div></div>
+    <div class="lmain gut"><div class="inner">
+      <div class="coachrow"><div class="mascot${L.mood==="cheer"?" bounce":""}">${pino(L.mood)}</div>
+        <div class="bubble">${L.comboMsg?`<span class="combo">${L.comboMsg}</span><br>`:""}${promptText()}${L.hint?`<div class="hintbox">${hintHTML()}</div>`:""}</div></div>
+      ${notebook(p,L.vals,L.cur,{entry:L.entry,bad:L.bad,fresh:L.fresh,letter})}
+    </div></div>
+    <div class="lfoot gut"><div class="inner">
+      <div class="pad">${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="key" data-k="${n}">${n}</button>`).join("")}
+        <button class="key hint" data-k="hint" aria-label="Tipp">${IC.bulb}</button><button class="key" data-k="0">0</button><button class="key" data-k="del" aria-label="Löschen">${IC.back}</button></div>
+      <button class="b3 wide" id="checkbtn" style="--c:var(--good)" ${L.entry?"":"disabled"}>${tt.check}</button>
+    </div></div>`;
+  L.heartHit=false;L.fresh=null;
+  app.querySelectorAll(".key").forEach(b=>b.onclick=()=>key(b.dataset.k));
+  app.querySelector("#checkbtn").onclick=check;
+  app.querySelector("#quit").onclick=askQuit;
+  drawFb();
+}
+function updateEntry(){
+  const s=app.querySelector(".slot");if(s)s.innerHTML=`${L.entry}<i class="caret"></i>`,s.classList.remove("bad","shake");
+  const c=app.querySelector("#checkbtn");if(c)c.disabled=!L.entry;
+}
+function key(k){
+  if(!L||L.fb)return;
+  if(k==="hint"){L.hint=!L.hint;sfx.tap();drawLesson();return;}
+  if(k==="del"){L.entry=L.entry.slice(0,-1);updateEntry();return;}
+  if(L.entry.length<5){L.entry=(L.entry==="0"?"":L.entry)+k;sfx.tap();updateEntry();}
+}
+function check(){
+  if(!L||L.fb||!L.entry)return;
+  const p=P(),st=p.steps[L.cur],v=parseInt(L.entry,10),tt=t();
+  L.comboMsg="";
+  if(v===st.expected){
+    L.vals[st.key]=v;L.fresh=st.key;L.cur++;L.entry="";L.hint=false;L.bad=false;L.stepMiss=0;L.steps++;L.combo++;
+    L.mood=L.combo%5===0?"cheer":"happy";if(L.combo%5===0)L.comboMsg=tt.combo(L.combo);
+    if(L.cur>=p.steps.length){
+      sfx.good();L.mood="cheer";
+      L.fb={kind:"good",title:tt.good[rnd(0,tt.good.length-1)],text:tt.solvedLine(p.q,p.d,p.n),xp:"+10 XP",btn:tt.cont,next:nextProblem};
+    }else sfx.tick();
+    drawLesson();return;
+  }
+  L.steps++;L.wrong++;L.combo=0;L.stepMiss++;L.hearts--;L.heartHit=true;L.mood="sad";L.bad=true;
+  let text=tt.wrong;
+  if(st.type==="chunk"){const pt=p.parts[st.i],base=pt.u*p.d,R=p.rem[st.i];
+    if(v>R)text=tt.tooBig(v,R);else if(v%base!==0)text=tt.notRound(v,p.d,base);else if(v<st.expected)text=tt.tooSmall;}
+  else if(st.type==="ksum")text=tt.sumWrong(p.n);
+  sfx.bad();
+  L.fb={kind:"bad",title:tt.bad,text,btn:L.hearts>0?tt.retry:tt.cont,next:()=>{
+    if(L.hearts<=0){showResult(false);return;}
+    L.entry="";L.bad=false;L.mood="think";if(L.stepMiss>=2)L.hint=true;drawLesson();}};
+  drawLesson();
+}
+function nextProblem(){
+  L.pi++;
+  if(L.pi>=L.probs.length){showResult(true);return;}
+  L.cur=0;L.vals={};L.entry="";L.hint=false;L.mood="happy";L.stepMiss=0;drawLesson();
+}
+function drawFb(){
+  const old=document.querySelector(".fb");if(old)old.remove();
+  if(!L||!L.fb)return;
+  const f=L.fb,el=document.createElement("div");
+  el.className=`fb ${f.kind} gut`;el.setAttribute("role","alert");
+  el.innerHTML=`<div class="inner"><h3>${f.kind==="good"?IC.check.replace('<svg','<svg width="30" height="30"'):IC.x.replace('<svg','<svg width="28" height="28"')}${f.title}</h3>
+    <p>${f.text}${f.xp?` <span class="xp">${f.xp}</span>`:""}</p>
+    <button class="b3 wide" id="fbbtn" style="--c:var(${f.kind==="good"?"--good":"--bad"})">${f.btn}</button></div>`;
+  document.body.appendChild(el);
+  const b=el.querySelector("#fbbtn");b.onclick=()=>{const n=f.next;L.fb=null;el.remove();n();};b.focus({preventScroll:true});
+}
+function askQuit(){
+  const tt=t();
+  const m=modal(`<div style="display:flex;gap:12px;align-items:center"><div style="width:52px">${pino("sad")}</div><div><h2>${tt.quitQ}</h2><p class="sub">${tt.quitSub}</p></div></div>
+    <div class="mbtns"><button class="b3 wide" id="q-keep">${tt.keep}</button><button class="b3 ghost wide" id="q-quit" style="color:var(--bad)">${tt.quit}</button></div>`);
+  m.querySelector("#q-keep").onclick=closeModal;
+  m.querySelector("#q-quit").onclick=()=>{closeModal();document.querySelector(".fb")?.remove();showPath();};
+}
+function showResult(won){
+  const tt=t(),secs=Math.round((Date.now()-L.start)/1000);
+  document.querySelector(".fb")?.remove();
+  if(!won){
+    sfx.bad();
+    app.innerHTML=`<div class="result gut"><div style="width:110px">${pino("sad")}</div><h2>${tt.fail}</h2><p>${tt.failSub}</p>
+      <div class="rbtns"><button class="b3 wide" id="r-again">${tt.retry}</button><button class="b3 ghost wide" id="r-path">${tt.toPath}</button></div></div>`;
+    const g=L.g,probs=L.g<0?L.probs:null;
+    app.querySelector("#r-again").onclick=()=>startLesson(g,probs?[makeProblem(probs[0].n,probs[0].d)]:null);
+    app.querySelector("#r-path").onclick=()=>showPath();
+    return;
+  }
+  const perfect=L.wrong===0,xp=L.probs.length*10+(perfect?5:0);
+  const acc=Math.round(100*(L.steps-L.wrong)/Math.max(1,L.steps));
+  G.xp+=xp;
+  const today=dayKey(new Date()),y=new Date();y.setDate(y.getDate()-1);
+  if(G.lastDay!==today){G.streak=G.lastDay===dayKey(y)?G.streak+1:1;G.lastDay=today;}
+  if(L.g>=0&&L.g===G.progress)G.progress=Math.min(G.progress+1,UNITS.length*PER_UNIT);
+  save();sfx.win();confetti();
+  app.innerHTML=`<div class="result gut"><div style="width:110px" class="mascot bounce">${pino("cheer")}</div>
+    <h2>${tt.done}</h2><p>${tt.doneSub}</p>
+    ${perfect?`<div class="bonus">${tt.perfect}</div>`:""}
+    <div class="tiles"><div class="tile"><small>${tt.xpGot}</small><b>+${xp}</b></div>
+      <div class="tile" style="--c:var(--good)"><small>${tt.acc}</small><b>${acc}%</b></div>
+      <div class="tile" style="--c:var(--primary)"><small>${tt.time}</small><b>${Math.floor(secs/60)}:${String(secs%60).padStart(2,"0")}</b></div></div>
+    <div class="tiles" style="grid-template-columns:1fr"><div class="tile" style="--c:#ff8a1f"><small>${tt.streak}</small><b style="display:flex;justify-content:center;align-items:center;gap:6px">${IC.flame.replace('<svg','<svg width="28" height="28"')}${G.streak}</b></div></div>
+    <div class="rbtns"><button class="b3 wide" id="r-cont">${tt.cont}</button></div></div>`;
+  app.querySelector("#r-cont").onclick=()=>showPath();
+  L=null;
+}
+
+/* ---------- confetti ---------- */
+function confetti(){
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const c=document.getElementById("confetti"),x=c.getContext("2d");c.hidden=false;
+  c.width=innerWidth;c.height=innerHeight;
+  const cols=["#0fa39a","#7b5cf0","#ee8418","#e04d8a","#3456d1","#ffb81f","#21a867"];
+  const ps=Array.from({length:120},()=>({x:Math.random()*c.width,y:-20-Math.random()*c.height*.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*3,r:Math.random()*6.3,s:6+Math.random()*6,c:cols[rnd(0,6)]}));
+  const t0=performance.now();
+  (function f(now){x.clearRect(0,0,c.width,c.height);
+    ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.r+=.1;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);x.restore();});
+    if(now-t0<3200)requestAnimationFrame(f);else{x.clearRect(0,0,c.width,c.height);c.hidden=true;}})(t0);
+}
+
+/* ---------- keyboard ---------- */
+document.addEventListener("keydown",e=>{
+  if(layer.innerHTML&&e.key==="Escape"){closeModal();return;}
+  if(!L||layer.innerHTML||e.target.tagName==="INPUT")return;
+  if(L.fb){if(e.key==="Enter"){e.preventDefault();document.getElementById("fbbtn")?.click();}return;}
+  if(/^[0-9]$/.test(e.key))key(e.key);
+  else if(e.key==="Backspace")key("del");
+  else if(e.key==="Enter"){e.preventDefault();check();}
+});
+
+showPath();
+</script>
+
+</body></html>
